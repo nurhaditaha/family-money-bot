@@ -1,6 +1,6 @@
 function escapeCsvField(value: unknown): string {
   const str = String(value ?? '');
-  return str.includes(',') || str.includes('"') || str.includes('\n')
+  return str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')
     ? `"${str.replace(/"/g, '""')}"`
     : str;
 }

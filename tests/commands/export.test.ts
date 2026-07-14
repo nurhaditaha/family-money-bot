@@ -15,7 +15,7 @@ function makeCtx(overrides: { text?: string; gifts?: { data: unknown; error: unk
             currency: 'SGD',
             giver: 'Aunty',
             occasion: 'Raya',
-            note: null,
+            note: 'from Aunty "Jane", with love',
             banked: false,
             date: '2026-04-10',
             children: { name: 'Aisyah' },
@@ -47,8 +47,11 @@ describe('handleExport', () => {
     const lines = (content as string).split('\n');
     expect(lines[0]).toBe('short_id,childName,amount,currency,giver,occasion,note,banked,date');
     expect(lines).toHaveLength(2);
-    expect(lines[1]).toContain('A7F2');
-    expect(lines[1]).toContain('Aisyah');
+    // The note contains both a comma and a double-quote — this is the exact
+    // path that must be quoted/escaped correctly or the CSV silently
+    // corrupts when opened in Excel/Sheets (a stray unescaped comma splits
+    // the field into extra columns; an unescaped quote breaks the parser).
+    expect(lines[1]).toBe('A7F2,Aisyah,50,SGD,Aunty,Raya,"from Aunty ""Jane"", with love",false,2026-04-10');
   });
 
   it('names the file with the year when a valid year is given', async () => {

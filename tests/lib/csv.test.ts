@@ -21,4 +21,14 @@ describe('toCsv', () => {
   it('returns just the header for no records', () => {
     expect(toCsv(['a', 'b'], [])).toBe('a,b');
   });
+
+  it('quotes and doubles embedded double-quote characters', () => {
+    const csv = toCsv(['note'], [{ note: 'she said "thanks"' }]);
+    expect(csv).toBe('note\n"she said ""thanks"""');
+  });
+
+  it('quotes fields containing a bare carriage return', () => {
+    const csv = toCsv(['note'], [{ note: 'has\rcarriage return' }]);
+    expect(csv).toBe('note\n"has\rcarriage return"');
+  });
 });
