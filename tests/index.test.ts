@@ -54,4 +54,26 @@ describe('worker webhook', () => {
 
     expect(sendMessageMock).toHaveBeenCalledWith(123, expect.stringContaining('/log'));
   });
+
+  it('does nothing when the update has neither a message nor a callback_query', async () => {
+    await worker.fetch(makeRequest({ update_id: 3 }), env as never);
+
+    expect(sendMessageMock).not.toHaveBeenCalled();
+    expect(isAuthorizedMock).not.toHaveBeenCalled();
+  });
+
+  it('replies with a generic error and logs when a Supabase call throws', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    isAuthorizedMock.mockRejectedValue(new Error('connection failed'));
+
+    await worker.fetch(
+      makeRequest({ update_id: 4, message: { message_id: 4, from: { id: 456, first_name: 'X' }, chat: { id: 456 }, text: '/help' } }),
+      env as never
+    );
+
+    expect(sendMessageMock).toHaveBeenCalledWith(456, 'Something went wrong, try again.');
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
 });
