@@ -4,7 +4,7 @@ import { setSession, clearSession } from '../db/sessions';
 
 export const handleAddChild: CommandHandler = async (ctx) => {
   const text = ctx.update.message?.text ?? '';
-  const name = text.replace('/addchild', '').trim();
+  const name = text.replace(/^\/\w+(@\w+)?\s*/, '').trim();
   if (!name) {
     await ctx.api.sendMessage(ctx.telegramId, 'Usage: /addchild <name>');
     return;

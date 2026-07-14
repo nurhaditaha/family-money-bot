@@ -49,6 +49,20 @@ describe('handleAddChild', () => {
       expect.stringContaining('Baby #3')
     );
   });
+
+  it('strips the @BotName suffix used in group-chat command syntax', async () => {
+    const ctx = makeCtx({
+      db: createMockDb({ children: { data: null, error: null } }),
+      update: { message: { text: '/addchild@SomeBotName Baby #3' } },
+    });
+
+    await handleAddChild(ctx as never);
+
+    expect((ctx.api as { sendMessage: ReturnType<typeof vi.fn> }).sendMessage).toHaveBeenCalledWith(
+      123,
+      'Added child: Baby #3'
+    );
+  });
 });
 
 describe('handleRenameChild', () => {
