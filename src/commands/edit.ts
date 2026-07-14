@@ -58,6 +58,16 @@ export async function continueEdit(ctx: Ctx): Promise<void> {
       }
       value = amount;
     }
+    if (field === 'currency') {
+      if (!/^[A-Za-z]{3}$/.test(text)) {
+        await ctx.api.sendMessage(
+          ctx.telegramId,
+          `Currency should be a 3-letter code, e.g. SGD. New value for currency?`
+        );
+        return;
+      }
+      value = text.toUpperCase();
+    }
     if (field === 'banked') value = text.toLowerCase().startsWith('y');
 
     await updateGiftField(ctx.db, giftId, field, value);

@@ -183,5 +183,74 @@ describe('continueEdit', () => {
 
       expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('false'));
     });
+
+    it('uppercases and stores a valid 3-letter currency code', async () => {
+      const sendMessage = vi.fn();
+      const db = createMockDb({ gifts: { data: null, error: null } });
+      const ctx = {
+        db,
+        api: { sendMessage },
+        telegramId: 123,
+        update: { message: { text: 'usd' } },
+        session: { command: 'edit', step: 'newValue', data: { giftId: 'g1', shortId: 'A7F2', field: 'currency' } },
+      };
+
+      await continueEdit(ctx as never);
+
+      expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('USD'));
+    });
+
+    it('rejects an invalid currency code without updating and re-prompts', async () => {
+      const sendMessage = vi.fn();
+      const db = createMockDb({ gifts: { data: null, error: null } });
+      const fromSpy = db.from as unknown as ReturnType<typeof vi.fn>;
+      const ctx = {
+        db,
+        api: { sendMessage },
+        telegramId: 123,
+        update: { message: { text: 'banana' } },
+        session: { command: 'edit', step: 'newValue', data: { giftId: 'g1', shortId: 'A7F2', field: 'currency' } },
+      };
+
+      await continueEdit(ctx as never);
+
+      expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('3-letter code'));
+      expect(sendMessage).not.toHaveBeenCalledWith(123, expect.stringContaining('Updated'));
+      expect(fromSpy).not.toHaveBeenCalledWith('gifts');
+    });
+
+    it('rejects a numeric-only currency code without updating', async () => {
+      const sendMessage = vi.fn();
+      const db = createMockDb({ gifts: { data: null, error: null } });
+      const fromSpy = db.from as unknown as ReturnType<typeof vi.fn>;
+      const ctx = {
+        db,
+        api: { sendMessage },
+        telegramId: 123,
+        update: { message: { text: '1' } },
+        session: { command: 'edit', step: 'newValue', data: { giftId: 'g1', shortId: 'A7F2', field: 'currency' } },
+      };
+
+      await continueEdit(ctx as never);
+
+      expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('3-letter code'));
+      expect(fromSpy).not.toHaveBeenCalledWith('gifts');
+    });
+
+    it('stores a plain-string field (giver) as-is', async () => {
+      const sendMessage = vi.fn();
+      const db = createMockDb({ gifts: { data: null, error: null } });
+      const ctx = {
+        db,
+        api: { sendMessage },
+        telegramId: 123,
+        update: { message: { text: 'Aunty Susan' } },
+        session: { command: 'edit', step: 'newValue', data: { giftId: 'g1', shortId: 'A7F2', field: 'giver' } },
+      };
+
+      await continueEdit(ctx as never);
+
+      expect(sendMessage).toHaveBeenCalledWith(123, expect.stringContaining('Aunty Susan'));
+    });
   });
 });
