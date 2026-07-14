@@ -1,0 +1,11 @@
+name = "duit-raya-bot"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+[vars]
+# Non-secret vars go here if needed later.
+
+# Secrets (TELEGRAM_BOT_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY) are set via:
+#   wrangler secret put TELEGRAM_BOT_TOKEN
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_SERVICE_KEY
