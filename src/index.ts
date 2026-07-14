@@ -6,6 +6,7 @@ import type { TelegramUpdate } from './telegram/types';
 import type { Ctx, CommandHandler } from './commands/types';
 import { handleHelp } from './commands/help';
 import { handleLog, continueLog } from './commands/log';
+import { handleAddChild, handleRenameChild, continueRenameChild } from './commands/children';
 
 export interface Env {
   TELEGRAM_BOT_TOKEN: string;
@@ -18,6 +19,8 @@ export interface Env {
 const commands: Record<string, CommandHandler> = {
   '/help': handleHelp,
   '/log': handleLog,
+  '/addchild': handleAddChild,
+  '/renamechild': handleRenameChild,
 };
 
 export default {
@@ -48,6 +51,8 @@ export default {
         await commands[text](ctx);
       } else if (session?.command === 'log') {
         await continueLog(ctx);
+      } else if (session?.command === 'renamechild') {
+        await continueRenameChild(ctx);
       }
       // Additional session-continuation and callback-query routing are added in later tasks.
     } catch (err) {
