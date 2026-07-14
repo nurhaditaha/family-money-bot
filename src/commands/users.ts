@@ -31,6 +31,13 @@ export const handleRemoveUser: CommandHandler = async (ctx) => {
   // the bot could end up with zero authorized users and no way back in —
   // an unauthorized sender is only ever told to ask an existing user
   // (see the auth flow), which is impossible if nobody is left.
+  //
+  // NOTE: this is a check-then-act against the users table (count, then
+  // remove) — two genuinely simultaneous /removeuser calls targeting the
+  // last two users could both pass the count check before either removal
+  // lands, leaving zero authorized users. Accepted known limitation given
+  // this bot's low-concurrency, few-person usage pattern (same TOCTOU class
+  // as the /bank selection race noted in bank.ts).
   const remaining = await countUsers(ctx.db);
   if (remaining <= 1) {
     await ctx.api.sendMessage(
