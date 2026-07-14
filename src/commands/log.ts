@@ -1,6 +1,7 @@
 import type { Ctx, CommandHandler } from './types';
 import { listChildren } from '../db/children';
 import { distinctOccasions, distinctCurrencies, insertGift } from '../db/gifts';
+import { getDefaultCurrency } from '../db/settings';
 import { setSession, clearSession } from '../db/sessions';
 import { generateShortId } from '../lib/shortId';
 import { isValidCurrencyCode, normalizeCurrencyCode } from '../lib/currency';
@@ -42,12 +43,12 @@ export async function continueLog(ctx: Ctx): Promise<void> {
         return;
       }
       data.amount = amount;
-      const currencies = await distinctCurrencies(ctx.db);
+      const [defaultCurrency, currencies] = await Promise.all([getDefaultCurrency(ctx.db), distinctCurrencies(ctx.db)]);
       await advance(
         ctx,
         data,
         'currency',
-        `Currency? (e.g. ${['SGD', ...currencies].filter((v, i, a) => a.indexOf(v) === i).join(', ')})`
+        `Currency? (e.g. ${[defaultCurrency, ...currencies].filter((v, i, a) => a.indexOf(v) === i).join(', ')})`
       );
       return;
     }

@@ -71,6 +71,25 @@ describe('continueLog', () => {
     );
   });
 
+  it('suggests the configured default currency, not a hardcoded "SGD", in the currency prompt', async () => {
+    const ctx = makeCtx({
+      db: createMockDb({
+        children: { data: [{ id: 'c1', name: 'Aisyah' }], error: null },
+        settings: { data: { value: 'MYR' }, error: null },
+        gifts: { data: [], error: null },
+      }),
+      session: { command: 'log', step: 'amount', data: { childId: 'c1', childName: 'Aisyah' } },
+      update: { message: { text: '50' } },
+    });
+
+    await continueLog(ctx as never);
+
+    expect((ctx.api as { sendMessage: ReturnType<typeof vi.fn> }).sendMessage).toHaveBeenCalledWith(
+      123,
+      expect.stringContaining('MYR')
+    );
+  });
+
   it('re-prompts without advancing on non-numeric amount input', async () => {
     const ctx = makeCtx({
       session: { command: 'log', step: 'amount', data: { childId: 'c1', childName: 'Aisyah' } },
