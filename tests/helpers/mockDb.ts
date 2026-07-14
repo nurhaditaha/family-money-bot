@@ -35,7 +35,7 @@ export function createMockDb(responses: Record<string, MockResponse>): SupabaseC
     const chain: Record<string, any> = {};
 
     // Methods that return the chain for further chaining.
-    const chainMethods = ['select', 'eq', 'insert', 'update', 'upsert', 'delete', 'order', 'in'];
+    const chainMethods = ['select', 'eq', 'insert', 'update', 'upsert', 'delete', 'order', 'in', 'not'];
     for (const method of chainMethods) {
       chain[method] = vi.fn(() => chain);
     }

@@ -55,6 +55,28 @@ describe('continueLog', () => {
     );
   });
 
+  it('advances from the "giver" step to "occasion" on free-text input, using distinctOccasions via the mock\'s .not() support', async () => {
+    const ctx = makeCtx({
+      db: createMockDb({
+        children: { data: [{ id: 'c1', name: 'Aisyah' }], error: null },
+        gifts: { data: [{ occasion: 'Raya' }, { occasion: 'Birthday' }], error: null },
+      }),
+      session: {
+        command: 'log',
+        step: 'giver',
+        data: { childId: 'c1', childName: 'Aisyah', amount: 50, currency: 'SGD' },
+      },
+      update: { message: { text: 'Aunty Zainab' } },
+    });
+
+    await continueLog(ctx as never);
+
+    expect((ctx.api as { sendMessage: ReturnType<typeof vi.fn> }).sendMessage).toHaveBeenCalledWith(
+      123,
+      expect.stringContaining('Occasion')
+    );
+  });
+
   it('completes the flow and confirms with a short ID when the last step (banked) is answered', async () => {
     const ctx = makeCtx({
       session: {
