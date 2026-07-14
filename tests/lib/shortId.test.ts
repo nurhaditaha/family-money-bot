@@ -15,9 +15,12 @@ describe('generateShortId', () => {
 
   it('is deterministic given a fixed random source', () => {
     const createFixedRandom = () => {
+      const values = [0, 0.25, 0.5, 0.75];
       let calls = 0;
       return () => {
-        return [0, 0.25, 0.5, 0.75][calls++ % 4];
+        // calls++ % 4 is always a valid index into the 4-element `values`
+        // array, so the lookup can never actually be undefined.
+        return values[calls++ % 4] as number;
       };
     };
     const random1 = createFixedRandom();

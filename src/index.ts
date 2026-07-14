@@ -61,7 +61,9 @@ export default {
 
       const session = await getSession(db, telegramId);
       const ctx: Ctx = { db, api, telegramId, update, session };
-      const text = update.message?.text?.trim().split(' ')[0];
+      // Group chats often suffix commands with @BotName (e.g. /edit@SomeBotName).
+      // Strip that suffix from the command token before matching against the registry.
+      const text = update.message?.text?.trim().split(' ')[0]?.replace(/@\w+$/, '');
       const callbackData = update.callback_query?.data;
 
       if (callbackData?.startsWith('bank:toggle:')) {

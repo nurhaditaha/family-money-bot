@@ -55,6 +55,18 @@ describe('worker webhook', () => {
     expect(sendMessageMock).toHaveBeenCalledWith(123, expect.stringContaining('/log'));
   });
 
+  it('routes /help@SomeTestBot to the help handler like the bare /help command', async () => {
+    isAuthorizedMock.mockResolvedValue(true);
+    getSessionMock.mockResolvedValue(null);
+
+    await worker.fetch(
+      makeRequest({ update_id: 6, message: { message_id: 6, from: { id: 123, first_name: 'X' }, chat: { id: 123 }, text: '/help@SomeTestBot' } }),
+      env as never
+    );
+
+    expect(sendMessageMock).toHaveBeenCalledWith(123, expect.stringContaining('/log'));
+  });
+
   it('derives telegramId from callback_query.from.id and routes bank:toggle callbacks', async () => {
     isAuthorizedMock.mockResolvedValue(true);
     getSessionMock.mockResolvedValue({ command: 'bank', step: 'select', data: { selected: [] } });
