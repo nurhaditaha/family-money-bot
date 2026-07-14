@@ -88,10 +88,6 @@ describe('handleSetDefaultCurrency', () => {
       session: null,
     };
 
-    try {
-      await handleSetDefaultCurrency(ctx as never);
-    } catch (e) {
-      expect(String(e)).toContain('Database error');
-    }
+    await expect(handleSetDefaultCurrency(ctx as never)).rejects.toThrow('Database error');
   });
 });
