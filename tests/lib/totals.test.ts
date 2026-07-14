@@ -21,6 +21,14 @@ describe('groupTotalsByCurrency', () => {
   it('returns an empty object for no gifts', () => {
     expect(groupTotalsByCurrency([])).toEqual({});
   });
+
+  it('does not break on negative amounts (e.g. a future correction/adjustment)', () => {
+    const result = groupTotalsByCurrency([
+      { currency: 'SGD', amount: 50 },
+      { currency: 'SGD', amount: -20 },
+    ]);
+    expect(result).toEqual({ SGD: 30 });
+  });
 });
 
 describe('formatTotals', () => {
@@ -34,5 +42,17 @@ describe('formatTotals', () => {
 
   it('returns a placeholder string for no totals', () => {
     expect(formatTotals({})).toBe('No gifts logged yet');
+  });
+
+  it('rounds floating-point drift to 2 decimal places', () => {
+    const totals = groupTotalsByCurrency([
+      { currency: 'SGD', amount: 0.1 },
+      { currency: 'SGD', amount: 0.2 },
+    ]);
+    expect(formatTotals(totals)).toBe('SGD 0.30');
+  });
+
+  it('formats a negative amount', () => {
+    expect(formatTotals({ SGD: -20 })).toBe('SGD -20');
   });
 });
