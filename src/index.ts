@@ -11,6 +11,7 @@ import { handleEdit, continueEdit } from './commands/edit';
 import { handleBank, toggleBankSelection, confirmBank } from './commands/bank';
 import { handleTotal, handleTotals } from './commands/totals';
 import { handleUnbanked } from './commands/unbanked';
+import { handleExport } from './commands/export';
 
 export interface Env {
   TELEGRAM_BOT_TOKEN: string;
@@ -30,6 +31,7 @@ const commands: Record<string, CommandHandler> = {
   '/total': handleTotal,
   '/totals': handleTotals,
   '/unbanked': handleUnbanked,
+  '/export': handleExport,
 };
 
 export default {

@@ -91,6 +91,54 @@ export async function giftsForChild(
   return (data ?? []) as { currency: string; amount: number }[];
 }
 
+export interface ExportRow {
+  short_id: string;
+  childName: string;
+  amount: number;
+  currency: string;
+  giver: string | null;
+  occasion: string | null;
+  note: string | null;
+  banked: boolean;
+  date: string;
+}
+
+export async function giftsForExport(db: SupabaseClient, year?: number): Promise<ExportRow[]> {
+  let query = db
+    .from('gifts')
+    .select('short_id, amount, currency, giver, occasion, note, banked, date, children(name)');
+  if (year) {
+    query = query.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
+  }
+  const { data, error } = await query;
+  if (error) throw new Error(`giftsForExport failed: ${(error as { message: string }).message}`);
+  return ((data ?? []) as unknown[]).map((row) => {
+    const r = row as {
+      short_id: string;
+      amount: number;
+      currency: string;
+      giver: string | null;
+      occasion: string | null;
+      note: string | null;
+      banked: boolean;
+      date: string;
+      children: { name: string } | { name: string }[];
+    };
+    const child = Array.isArray(r.children) ? r.children[0] : r.children;
+    return {
+      short_id: r.short_id,
+      childName: child?.name ?? '',
+      amount: r.amount,
+      currency: r.currency,
+      giver: r.giver,
+      occasion: r.occasion,
+      note: r.note,
+      banked: r.banked,
+      date: r.date,
+    };
+  });
+}
+
 export async function totalsByChild(
   db: SupabaseClient
 ): Promise<{ childName: string; currency: string; amount: number }[]> {
