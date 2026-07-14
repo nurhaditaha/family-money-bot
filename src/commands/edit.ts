@@ -1,6 +1,7 @@
 import type { Ctx, CommandHandler } from './types';
 import { findGiftByShortId, updateGiftField, isEditableField, type EditableField } from '../db/giftLookup';
 import { setSession, clearSession } from '../db/sessions';
+import { isValidCurrencyCode, normalizeCurrencyCode } from '../lib/currency';
 
 export const handleEdit: CommandHandler = async (ctx) => {
   const text = ctx.update.message?.text ?? '';
@@ -59,14 +60,14 @@ export async function continueEdit(ctx: Ctx): Promise<void> {
       value = amount;
     }
     if (field === 'currency') {
-      if (!/^[A-Za-z]{3}$/.test(text)) {
+      if (!isValidCurrencyCode(text)) {
         await ctx.api.sendMessage(
           ctx.telegramId,
           `Currency should be a 3-letter code, e.g. SGD. New value for currency?`
         );
         return;
       }
-      value = text.toUpperCase();
+      value = normalizeCurrencyCode(text);
     }
     if (field === 'banked') value = text.toLowerCase().startsWith('y');
 

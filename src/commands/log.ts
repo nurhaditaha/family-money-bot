@@ -3,6 +3,7 @@ import { listChildren } from '../db/children';
 import { distinctOccasions, distinctCurrencies, insertGift } from '../db/gifts';
 import { setSession, clearSession } from '../db/sessions';
 import { generateShortId } from '../lib/shortId';
+import { isValidCurrencyCode, normalizeCurrencyCode } from '../lib/currency';
 
 const STEPS = ['child', 'amount', 'currency', 'giver', 'occasion', 'note', 'banked'] as const;
 type Step = (typeof STEPS)[number];
@@ -51,11 +52,11 @@ export async function continueLog(ctx: Ctx): Promise<void> {
       return;
     }
     case 'currency': {
-      if (!/^[A-Za-z]{3}$/.test(text)) {
+      if (!isValidCurrencyCode(text)) {
         await ctx.api.sendMessage(ctx.telegramId, `Currency should be a 3-letter code, e.g. SGD. Try again.`);
         return;
       }
-      data.currency = text.toUpperCase();
+      data.currency = normalizeCurrencyCode(text);
       await advance(ctx, data, 'giver', `Who gave it? (or type "skip")`);
       return;
     }
