@@ -81,3 +81,32 @@ export async function markBanked(db: SupabaseClient, giftIds: string[]): Promise
   const { error } = await db.from('gifts').update({ banked: true }).in('id', giftIds);
   if (error) throw new Error(`markBanked failed: ${(error as { message: string }).message}`);
 }
+
+export async function giftsForChild(
+  db: SupabaseClient,
+  childId: string
+): Promise<{ currency: string; amount: number }[]> {
+  const { data, error } = await db.from('gifts').select('currency, amount').eq('child_id', childId);
+  if (error) throw new Error(`giftsForChild failed: ${(error as { message: string }).message}`);
+  return (data ?? []) as { currency: string; amount: number }[];
+}
+
+export async function totalsByChild(
+  db: SupabaseClient
+): Promise<{ childName: string; currency: string; amount: number }[]> {
+  const { data, error } = await db.from('gifts').select('currency, amount, children(name)');
+  if (error) throw new Error(`totalsByChild failed: ${(error as { message: string }).message}`);
+  return ((data ?? []) as unknown[]).map((row) => {
+    const r = row as {
+      currency: string;
+      amount: number;
+      children: { name: string } | { name: string }[];
+    };
+    const child = Array.isArray(r.children) ? r.children[0] : r.children;
+    return {
+      childName: child?.name ?? '',
+      currency: r.currency,
+      amount: r.amount,
+    };
+  });
+}

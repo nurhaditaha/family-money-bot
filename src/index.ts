@@ -9,6 +9,7 @@ import { handleLog, continueLog } from './commands/log';
 import { handleAddChild, handleRenameChild, continueRenameChild } from './commands/children';
 import { handleEdit, continueEdit } from './commands/edit';
 import { handleBank, toggleBankSelection, confirmBank } from './commands/bank';
+import { handleTotal, handleTotals } from './commands/totals';
 
 export interface Env {
   TELEGRAM_BOT_TOKEN: string;
@@ -25,6 +26,8 @@ const commands: Record<string, CommandHandler> = {
   '/renamechild': handleRenameChild,
   '/edit': handleEdit,
   '/bank': handleBank,
+  '/total': handleTotal,
+  '/totals': handleTotals,
 };
 
 export default {
