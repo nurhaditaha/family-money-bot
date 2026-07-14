@@ -33,10 +33,16 @@ export const handleBank: CommandHandler = async (ctx) => {
   await ctx.api.sendMessage(ctx.telegramId, `Which of these have you deposited?\n\n${list}`, keyboard);
 };
 
+// NOTE: this is a read-modify-write against the session row (read selected,
+// mutate, write back). Two genuinely simultaneous taps (not sequential —
+// actual concurrent requests) could race and one toggle could be lost. This
+// is an accepted known limitation given the bot's sequential-tap usage
+// pattern; the /bank confirmation step below re-verifies against the live
+// unbanked list regardless, so a lost toggle can't cause double-counting.
 export async function toggleBankSelection(ctx: Ctx): Promise<void> {
   const cbq = ctx.update.callback_query;
   const session = ctx.session;
-  if (!cbq || !session) return;
+  if (!cbq || !session || session.command !== 'bank') return;
   const giftId = cbq.data.split(':')[2];
   if (!giftId) return;
   const selected = new Set(session.data.selected as string[]);
@@ -52,7 +58,7 @@ export async function toggleBankSelection(ctx: Ctx): Promise<void> {
 export async function confirmBank(ctx: Ctx): Promise<void> {
   const cbq = ctx.update.callback_query;
   const session = ctx.session;
-  if (!cbq || !session) return;
+  if (!cbq || !session || session.command !== 'bank') return;
   const selected = session.data.selected as string[];
   const entries = session.data.entries as { id: string; currency: string; amount: number }[];
   if (selected.length === 0) {
@@ -61,10 +67,34 @@ export async function confirmBank(ctx: Ctx): Promise<void> {
     await ctx.api.answerCallbackQuery(cbq.id, 'Select at least one entry first.');
     return;
   }
-  await markBanked(ctx.db, selected);
-  const chosen = entries.filter((e) => selected.includes(e.id));
+
+  // Re-check against the live unbanked list before committing. Another user may
+  // have already confirmed some of these same IDs (e.g. two spouses both have
+  // /bank open at once) — markBanked() itself is idempotent, but without this
+  // re-check the confirmation total would double-count money someone else
+  // already banked.
+  const stillUnbanked = new Set((await listUnbanked(ctx.db)).map((g) => g.id));
+  const staleCount = selected.filter((id) => !stillUnbanked.has(id)).length;
+  const toBank = selected.filter((id) => stillUnbanked.has(id));
+
+  if (toBank.length === 0) {
+    await clearSession(ctx.db, ctx.telegramId);
+    await ctx.api.answerCallbackQuery(cbq.id);
+    await ctx.api.sendMessage(
+      ctx.telegramId,
+      'All of your selected entries were already banked by someone else — nothing to do.'
+    );
+    return;
+  }
+
+  await markBanked(ctx.db, toBank);
+  const chosen = entries.filter((e) => toBank.includes(e.id));
   const totals = groupTotalsByCurrency(chosen);
   await clearSession(ctx.db, ctx.telegramId);
   await ctx.api.answerCallbackQuery(cbq.id);
-  await ctx.api.sendMessage(ctx.telegramId, `Banked ✅ ${selected.length} entries — total ${formatTotals(totals)} deposited`);
+  const staleNote = staleCount > 0 ? ` (${staleCount} of ${selected.length} selected were already banked by someone else)` : '';
+  await ctx.api.sendMessage(
+    ctx.telegramId,
+    `Banked ✅ ${toBank.length} entries — total ${formatTotals(totals)} deposited${staleNote}`
+  );
 }
