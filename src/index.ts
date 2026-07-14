@@ -7,6 +7,7 @@ import type { Ctx, CommandHandler } from './commands/types';
 import { handleHelp } from './commands/help';
 import { handleLog, continueLog } from './commands/log';
 import { handleAddChild, handleRenameChild, continueRenameChild } from './commands/children';
+import { handleEdit, continueEdit } from './commands/edit';
 
 export interface Env {
   TELEGRAM_BOT_TOKEN: string;
@@ -21,6 +22,7 @@ const commands: Record<string, CommandHandler> = {
   '/log': handleLog,
   '/addchild': handleAddChild,
   '/renamechild': handleRenameChild,
+  '/edit': handleEdit,
 };
 
 export default {
@@ -53,6 +55,8 @@ export default {
         await continueLog(ctx);
       } else if (session?.command === 'renamechild') {
         await continueRenameChild(ctx);
+      } else if (session?.command === 'edit') {
+        await continueEdit(ctx);
       }
       // Additional session-continuation and callback-query routing are added in later tasks.
     } catch (err) {
