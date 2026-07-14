@@ -5,6 +5,7 @@ import { getSession } from './db/sessions';
 import type { TelegramUpdate } from './telegram/types';
 import type { Ctx, CommandHandler } from './commands/types';
 import { handleHelp } from './commands/help';
+import { handleLog, continueLog } from './commands/log';
 
 export interface Env {
   TELEGRAM_BOT_TOKEN: string;
@@ -12,10 +13,11 @@ export interface Env {
   SUPABASE_SERVICE_KEY: string;
 }
 
-// Later tasks add entries here (e.g. '/log': handleLog) — nothing else in
-// this file needs to change when a new top-level command is added.
+// Later tasks add entries here — nothing else in this file needs to change
+// when a new top-level command is added.
 const commands: Record<string, CommandHandler> = {
   '/help': handleHelp,
+  '/log': handleLog,
 };
 
 export default {
@@ -44,8 +46,10 @@ export default {
 
       if (text && commands[text]) {
         await commands[text](ctx);
+      } else if (session?.command === 'log') {
+        await continueLog(ctx);
       }
-      // Session-continuation and callback-query routing are added in later tasks.
+      // Additional session-continuation and callback-query routing are added in later tasks.
     } catch (err) {
       console.error('Unhandled error in webhook handler:', err);
       await api.sendMessage(telegramId, 'Something went wrong, try again.');
