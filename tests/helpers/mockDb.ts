@@ -55,20 +55,6 @@ export function createMockDb(responses: Record<string, MockResponse>): SupabaseC
       return Promise.resolve(response);
     });
 
-    // Support catch pattern for error handling.
-    chain.catch = vi.fn((reject: (reason: any) => void) => {
-      if (response.error) {
-        reject(response.error);
-      }
-      return Promise.resolve(response);
-    });
-
-    // Support finally pattern.
-    chain.finally = vi.fn((onFinally: () => void) => {
-      onFinally();
-      return Promise.resolve(response);
-    });
-
     return chain;
   });
 
