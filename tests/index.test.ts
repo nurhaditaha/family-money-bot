@@ -55,6 +55,28 @@ describe('worker webhook', () => {
     expect(sendMessageMock).toHaveBeenCalledWith(123, expect.stringContaining('/log'));
   });
 
+  it('derives telegramId from callback_query.from.id and routes bank:toggle callbacks', async () => {
+    isAuthorizedMock.mockResolvedValue(true);
+    getSessionMock.mockResolvedValue({ command: 'bank', step: 'select', data: { selected: [] } });
+
+    await worker.fetch(
+      makeRequest({
+        update_id: 5,
+        callback_query: {
+          id: 'cbq1',
+          from: { id: 789, first_name: 'X' },
+          message: { chat: { id: 789 }, message_id: 1 },
+          data: 'bank:toggle:g1',
+        },
+      }),
+      env as never
+    );
+
+    expect(isAuthorizedMock).toHaveBeenCalledWith(expect.anything(), 789);
+    // toggleBankSelection acknowledges the tap rather than sending a message.
+    expect(sendMessageMock).not.toHaveBeenCalled();
+  });
+
   it('does nothing when the update has neither a message nor a callback_query', async () => {
     await worker.fetch(makeRequest({ update_id: 3 }), env as never);
 

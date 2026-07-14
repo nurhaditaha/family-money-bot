@@ -40,3 +40,44 @@ export async function distinctCurrencies(db: SupabaseClient): Promise<string[]> 
   const set = new Set((data ?? []).map((row) => (row as { currency: string }).currency));
   return Array.from(set);
 }
+
+export interface UnbankedGift {
+  id: string;
+  short_id: string;
+  amount: number;
+  currency: string;
+  child_id: string;
+  childName: string;
+}
+
+export async function listUnbanked(db: SupabaseClient): Promise<UnbankedGift[]> {
+  const { data, error } = await db
+    .from('gifts')
+    .select('id, short_id, amount, currency, child_id, children(name)')
+    .eq('banked', false);
+  if (error) throw new Error(`listUnbanked failed: ${(error as { message: string }).message}`);
+  return ((data ?? []) as unknown[]).map((row) => {
+    const r = row as {
+      id: string;
+      short_id: string;
+      amount: number;
+      currency: string;
+      child_id: string;
+      children: { name: string } | { name: string }[];
+    };
+    const child = Array.isArray(r.children) ? r.children[0] : r.children;
+    return {
+      id: r.id,
+      short_id: r.short_id,
+      amount: r.amount,
+      currency: r.currency,
+      child_id: r.child_id,
+      childName: child?.name ?? '',
+    };
+  });
+}
+
+export async function markBanked(db: SupabaseClient, giftIds: string[]): Promise<void> {
+  const { error } = await db.from('gifts').update({ banked: true }).in('id', giftIds);
+  if (error) throw new Error(`markBanked failed: ${(error as { message: string }).message}`);
+}

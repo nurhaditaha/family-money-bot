@@ -8,6 +8,7 @@ import { handleHelp } from './commands/help';
 import { handleLog, continueLog } from './commands/log';
 import { handleAddChild, handleRenameChild, continueRenameChild } from './commands/children';
 import { handleEdit, continueEdit } from './commands/edit';
+import { handleBank, toggleBankSelection, confirmBank } from './commands/bank';
 
 export interface Env {
   TELEGRAM_BOT_TOKEN: string;
@@ -23,6 +24,7 @@ const commands: Record<string, CommandHandler> = {
   '/addchild': handleAddChild,
   '/renamechild': handleRenameChild,
   '/edit': handleEdit,
+  '/bank': handleBank,
 };
 
 export default {
@@ -48,8 +50,13 @@ export default {
       const session = await getSession(db, telegramId);
       const ctx: Ctx = { db, api, telegramId, update, session };
       const text = update.message?.text?.trim().split(' ')[0];
+      const callbackData = update.callback_query?.data;
 
-      if (text && commands[text]) {
+      if (callbackData?.startsWith('bank:toggle:')) {
+        await toggleBankSelection(ctx);
+      } else if (callbackData === 'bank:confirm') {
+        await confirmBank(ctx);
+      } else if (text && commands[text]) {
         await commands[text](ctx);
       } else if (session?.command === 'log') {
         await continueLog(ctx);

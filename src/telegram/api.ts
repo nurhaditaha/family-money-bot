@@ -15,8 +15,8 @@ export function createTelegramApi(token: string, fetchImpl: typeof fetch = fetch
     async sendMessage(chatId: number, text: string, replyMarkup?: unknown) {
       return post('sendMessage', { chat_id: chatId, text, reply_markup: replyMarkup, parse_mode: 'HTML' });
     },
-    async answerCallbackQuery(callbackQueryId: string) {
-      return post('answerCallbackQuery', { callback_query_id: callbackQueryId });
+    async answerCallbackQuery(callbackQueryId: string, text?: string) {
+      return post('answerCallbackQuery', { callback_query_id: callbackQueryId, text });
     },
     async sendDocument(chatId: number, filename: string, content: string) {
       const form = new FormData();
