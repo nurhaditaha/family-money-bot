@@ -36,6 +36,16 @@ A Telegram bot for tracking money gifts given to your kids, year-round, across a
    ```
 5. Message your bot on Telegram with `/help` — you should get a reply.
 
+### Optional: sharing a Supabase project with other tools
+
+If you want to run this bot alongside other tools in a single Supabase project (to stay within the free tier's project limit), isolate it in its own Postgres schema instead of `public`:
+
+1. In the SQL Editor, run `create schema if not exists duit_raya;` then run `migrations/001_init.sql` with every `create table` statement prefixed `duit_raya.` (e.g. `create table duit_raya.users (...)`), and the seed insert as `insert into duit_raya.settings ...`.
+2. In Supabase, go to **Project Settings → API → Exposed schemas** and add `duit_raya` to the list — PostgREST won't serve a schema it isn't told to expose.
+3. Set the `SUPABASE_SCHEMA` secret to `duit_raya` (`npx wrangler secret put SUPABASE_SCHEMA`).
+
+Leave this step out entirely for a standalone deployment — everything defaults to the `public` schema.
+
 ## Commands
 
 See `/help` in the bot itself for the full, current list.

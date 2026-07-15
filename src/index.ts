@@ -19,6 +19,9 @@ export interface Env {
   TELEGRAM_BOT_TOKEN: string;
   SUPABASE_URL: string;
   SUPABASE_SERVICE_KEY: string;
+  // Optional: set this if this bot shares a Supabase project with other
+  // tools, each isolated in its own schema. Defaults to 'public'.
+  SUPABASE_SCHEMA?: string;
 }
 
 // Later tasks add entries here — nothing else in this file needs to change
@@ -44,7 +47,7 @@ export default {
     if (request.method !== 'POST') return new Response('OK');
 
     const update = (await request.json()) as TelegramUpdate;
-    const db = createDb(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
+    const db = createDb(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, env.SUPABASE_SCHEMA);
     const api = createTelegramApi(env.TELEGRAM_BOT_TOKEN);
 
     const telegramId = update.message?.from.id ?? update.callback_query?.from.id;
